@@ -15,54 +15,60 @@ const loading = () => {
 
 // Hide Loading
 const complete = () => {
-  quoteContainer.hidden = false;
-  loader.hidden = true;
+  if (!loader.hidden) {
+    quoteContainer.hidden = false;
+    loader.hidden = true;
+  }
 };
 
-// Show New Quote
-let newQuote = () => {
+// Get Quotes From API
+async function getQuote() {
   loading();
-  // Pick a random quote from apiQuotes array
-  const quote = apiQuotes[Math.floor(Math.random() * apiQuotes.length)];
-  //   Check if author field is null/blank and replace it with 'Unknown'
-  if (!quote.author) {
-    authorText.textContent = "Unknown";
-  } else {
-    authorText.textContent = quote.author;
+  const proxyUrl = "https://morning-lowlands-12361.herokuapp.com/";
+  const apiURL =
+    "http://api.forismatic.com/api/1.0/?method=getQuote&lang=en&format=json";
+  try {
+    const response = await fetch(proxyUrl + apiURL);
+    const data = await response.json();
+    if (
+      quoteText.innerText === data.quoteText &&
+      authorText.innerText === data.quoteAuthor
+    ) {
+      return getQuote();
+    } else {
+      if (data.quoteAuthor === "") {
+        // If Author is blank/null, add 'Unknown'
+        authorText.innerText = "Unknown";
+      } else {
+        authorText.innerText = data.quoteAuthor;
+      }
+      // Reduce font size for long quotes
+      if (data.quoteText.length > 120) {
+        quoteText.classList.add("long-quote");
+      } else {
+        quoteText.classList.remove("long-quote");
+      }
+      quoteText.innerText = data.quoteText;
+    }
+
+    // Stop Loader, Show Quote
+    complete();
+  } catch (error) {
+    getQuote();
   }
-  //   Check quote length to determine styling
-  if (quote.text.length > 120) {
-    quoteText.classList.add("long-quote");
-  } else {
-    quoteText.classList.remove("long-quote");
-  }
-  //   Set Quote, Hide Loader
-  quoteText.textContent = quote.text;
-  complete();
-};
+}
 
 // Tweet Quote
 const tweetQuote = () => {
-  const twitterUrl = `https://twitter.com/intent/tweet?text=${quoteText.textContent} - ${authorText.textContent}`;
+  const quote = quoteText.innerText;
+  const author = authorText.innerText;
+  const twitterUrl = `https://twitter.com/intent/tweet?text=${quote} - ${author}`;
   window.open(twitterUrl, "_blank");
 };
 
 // Event Listeners
-newQuoteBtn.addEventListener("click", newQuote);
+newQuoteBtn.addEventListener("click", getQuote);
 twitterBtn.addEventListener("click", tweetQuote);
 
-// Get Quotes From API
-async function getQuotes() {
-  loading();
-  const apiURL = "https://type.fit/api/quotes";
-  try {
-    const response = await fetch(apiURL);
-    apiQuotes = await response.json();
-    newQuote();
-  } catch (error) {
-    // Catch Error Here
-  }
-}
-
 // On Load
-getQuotes();
+getQuote();
