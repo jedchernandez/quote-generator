@@ -7,14 +7,12 @@ const loader = document.getElementById("loader");
 
 let apiQuotes = [];
 
-// Show Loading
-const loading = () => {
+const showLoadingSpinner = () => {
   loader.hidden = false;
   quoteContainer.hidden = true;
 };
 
-// Hide Loading
-const complete = () => {
+const removeLoadingSpinner = () => {
   if (!loader.hidden) {
     quoteContainer.hidden = false;
     loader.hidden = true;
@@ -23,7 +21,7 @@ const complete = () => {
 
 // Get Quotes From API
 async function getQuote() {
-  loading();
+  showLoadingSpinner();
   const proxyUrl = "https://morning-lowlands-12361.herokuapp.com/";
   const apiURL =
     "http://api.forismatic.com/api/1.0/?method=getQuote&lang=en&format=json";
@@ -52,8 +50,9 @@ async function getQuote() {
     }
 
     // Stop Loader, Show Quote
-    complete();
+    removeLoadingSpinner();
   } catch (error) {
+    // Possible infinite loop
     getQuote();
   }
 }
